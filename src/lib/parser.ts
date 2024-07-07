@@ -45,14 +45,11 @@ const IGNORE_LIST = [
  *            In this case, #content-1 should not be considered as a top level readable element.
  */
 export function getTopLevelReadableElementsOnPage(): HTMLElement[] {
-  // console.log(window.document.body);
   const bodyElem = window.document.body;
   let allElements: HTMLElement[] = [];
 
   const result = checkIfValidReadableElement(bodyElem, allElements);
   allElements = result.elementsList;
-
-  console.log("stringified",allElements.toString());
   return allElements;
 }
 
@@ -67,49 +64,32 @@ const checkIfValidReadableElement = (
 ): ValidElementTypes => {
   let elementsList: HTMLElement[] = [...allElements];
   let childTopLevelElementExists = false;
-
   const allChildren = parentElement.children;
 
   for (let index = 0; index < allChildren.length; index++) {
     const element: HTMLElement = allChildren[index];
-    console.log("hello man22", element);
-
-    // case 4:  A top level readable element should not contain another top level readable element.
-    const result = checkIfValidReadableElement(
-      element,
-      elementsList,
-    );
-    childTopLevelElementExists = result.childTopLevelElementExists
-      ? result.childTopLevelElementExists
-      : childTopLevelElementExists;
-    
-    console.log(
-      "result.childTopLevelElementExists ",
-      result.childTopLevelElementExists,
-    );
-    console.log("childTopLevelElementExists", childTopLevelElementExists);
-
-    if (
-      childTopLevelElementExists ||
-      elementsList.length !== result.elementsList.length
-    ) {
-      continue;
-    }
-    elementsList = result.elementsList;
-
-
-    // case 1: check ignore list if this element exists there
-    const elementName = element.tagName;
-    console.log("elementName0", elementName);
-    if (IGNORE_LIST.includes(elementName.toUpperCase())) {
-      continue;
-    }
 
     // case 2: check text node should not be empty
     const elementText = element.textContent;
-    console.log("elementText908", elementText?.trim());
-    console.log("elementTextLength", elementText.trim().length);
     if (!elementText || !elementText.trim()) {
+      continue;
+    }
+
+    // case 4:  A top level readable element should not contain another top level readable element.
+    const result = checkIfValidReadableElement(element, elementsList);
+    elementsList = result.elementsList;
+    childTopLevelElementExists = result.childTopLevelElementExists
+      ? result.childTopLevelElementExists
+      : childTopLevelElementExists;
+    if (
+      result.childTopLevelElementExists
+    ) {
+      continue;
+    }
+    
+    // case 1: check ignore list if this element exists there
+    const elementName = element.tagName;
+    if (IGNORE_LIST.includes(elementName.toUpperCase())) {
       continue;
     }
 
@@ -119,7 +99,6 @@ const checkIfValidReadableElement = (
     }
 
     childTopLevelElementExists = true;
-    console.log("element is getting pushed", element.tagName);
     elementsList.push(element);
   }
 
